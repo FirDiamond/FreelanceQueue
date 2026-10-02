@@ -1,0 +1,49 @@
+# FreelanceQueue front-controller routing + access control.
+
+# --- routing --------------------------------------------------------------
+# Everything that is not a real file served straight from assets/ goes to the
+# front controller. Apache needs mod_rewrite (bundled with XAMPP).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Serve existing static files directly (CSS/JS/images under assets/).
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^assets/ - [L]
+
+  # Anything else is a route: hand it to index.php. QSA keeps the query string,
+  # so ?range=30d and ?next=/dashboard survive.
+  RewriteCond %{REQUEST_URI} !^/index\.php$
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# --- keep server internals off the web ------------------------------------
+# The router serves the app; these directories and files must never be fetched
+# directly. config.ini holds DB and SMTP passwords.
+<IfModule mod_authz_core.c>
+  <FilesMatch "\.(ini|sql|md|log)$">
+    Require all denied
+  </FilesMatch>
+  <FilesMatch "^(seed|serve)\.php$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+# Fallback for older Apache authz (2.2 style), harmless on 2.4.
+<IfModule !mod_authz_core.c>
+  <FilesMatch "\.(ini|sql|md|log)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>
+
+RedirectMatch 403 ^/(includes|src|views|data)(/|$)
+
+# No directory listings anywhere.
+Options -Indexes
+
+# Cap request bodies near the app's 1 MiB expectation (defence in depth; the
+# app enforces its own limit too).
+<IfModule mod_php.c>
+  php_value post_max_size 2M
+  php_value upload_max_filesize 2M
+</IfModule>
