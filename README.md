@@ -353,8 +353,10 @@ is plain PHP + MySQL as described above.
 
 ## License
 
-No license file is included yet. Add one before publishing if you intend others
-to reuse it.
+Released under the [MIT License](LICENSE).
+
+The reusable MVC core underneath this app is also published on its own as a tiny
+dependency-free micro-framework: **[FeatherPHP](https://github.com/FirDiamond/FeatherPHP)**.
 
 
 
